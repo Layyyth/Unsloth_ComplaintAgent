@@ -1,0 +1,296 @@
+DUPLICATE ANALYSIS REPORT
+==================================================
+
+Dataset: 19954 total rows
+Duplicates: 16482 rows (82.60%)
+Unique rows: 3472
+Duplicate patterns: 76
+
+DUPLICATE PATTERNS (sorted by frequency):
+--------------------------------------------------
+
+Pattern #36 (appears 466 times):
+  user_input: Can you help me dispute a late fee on my credit card?
+  ticket_type: assistance
+  title: Credit card late fee dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you help me dispute a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #32 (appears 285 times):
+  user_input: Can you help me dispute a late fee on my credit card?
+  ticket_type: assistance
+  title: Credit Card Late Fee Dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you help me dispute a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #33 (appears 163 times):
+  user_input: Can you help me dispute a late fee on my credit card?
+  ticket_type: assistance
+  title: Credit card late fee disposition
+  description: Customer has submitted a request regarding credit card late fee disposition. Customer states: "Can you help me dispute a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #50 (appears 76 times):
+  user_input: Can you help me dispute an late fee on my credit card?
+  ticket_type: assistance
+  title: Credit card late fee dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you help me dispute an late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #27 (appears 76 times):
+  user_input: Can you help me dispute a late fee on my Credit Card?
+  ticket_type: assistance
+  title: Credit card late fee dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you help me dispute a late fee on my Credit Card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #66 (appears 58 times):
+  user_input: Could you help me dispute a late fee on my credit card?
+  ticket_type: assistance
+  title: Credit card late fee dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Could you help me dispute a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #48 (appears 48 times):
+  user_input: Can you help me dispute an late fee on my credit card?
+  ticket_type: assistance
+  title: Credit Card Late Fee Dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you help me dispute an late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #49 (appears 32 times):
+  user_input: Can you help me dispute an late fee on my credit card?
+  ticket_type: assistance
+  title: Credit card late fee disposition
+  description: Customer has submitted a request regarding credit card late fee disposition. Customer states: "Can you help me dispute an late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #7 (appears 30 times):
+  user_input: Can you assist me dispute a late fee on my credit card?
+  ticket_type: assistance
+  title: Credit card late fee dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you assist me dispute a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #26 (appears 28 times):
+  user_input: Can you help me dispute a late fee on my Credit Card?
+  ticket_type: assistance
+  title: Credit card late fee disposition
+  description: Customer has submitted a request regarding credit card late fee disposition. Customer states: "Can you help me dispute a late fee on my Credit Card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #53 (appears 19 times):
+  user_input: Can you help me disputed a late fee on my credit card?
+  ticket_type: assistance
+  title: Credit card late fee dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you help me disputed a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #24 (appears 19 times):
+  user_input: Can you help me dispute a late fee in my credit card?
+  ticket_type: assistance
+  title: Credit card late fee dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you help me dispute a late fee in my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #22 (appears 17 times):
+  user_input: Can you help me dispute a late fee in my credit card?
+  ticket_type: assistance
+  title: Credit Card Late Fee Dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you help me dispute a late fee in my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #59 (appears 15 times):
+  user_input: Could you assist me dispute a late fee on my credit card?
+  ticket_type: assistance
+  title: Credit card late fee dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Could you assist me dispute a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #65 (appears 14 times):
+  user_input: Could you help me dispute a late fee on my credit card?
+  ticket_type: assistance
+  title: Credit card late fee disposition
+  description: Customer has submitted a request regarding credit card late fee disposition. Customer states: "Could you help me dispute a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #31 (appears 14 times):
+  user_input: Can you help me dispute a late fee on my credit card?
+  ticket_type: assistance
+  title:  Credit card late fee dispute
+  description: Customer has submitted a request regarding  credit card late fee dispute. Customer states: "Can you help me dispute a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #46 (appears 13 times):
+  user_input: Can you help me dispute an late fee on my Credit Card?
+  ticket_type: assistance
+  title: Credit card late fee dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you help me dispute an late fee on my Credit Card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #64 (appears 13 times):
+  user_input: Could you help me dispute a late fee on my credit card?
+  ticket_type: assistance
+  title: Credit Card Late Fee Dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Could you help me dispute a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #39 (appears 12 times):
+  user_input: Can you help me dispute a late fee on my credit card?
+  ticket_type: assistance
+  title: Support Request
+  description: Customer has submitted a request regarding support request. Customer states: "Can you help me dispute a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+Pattern #5 (appears 11 times):
+  user_input: Can you assist me dispute a late fee on my credit card?
+  ticket_type: assistance
+  title: Credit Card Late Fee Dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you assist me dispute a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: Customer Service
+  service_impacted: General Banking
+  preferred_communication: phone
+  assistance_request: general assistance
+
+... and 56 more patterns
+
+EXAMPLES OF MOST COMMON DUPLICATES:
+--------------------------------------------------
+
+Example 36 (Frequency: 466 times):
+------------------------------
+user_input: Can you help me dispute a late fee on my credit card?
+ticket_type: assistance
+title: Credit card late fee dispute
+description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you help me dispute a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+severity: medium
+department_impacted: Customer Service
+service_impacted: General Banking
+preferred_communication: phone
+assistance_request: general assistance
+
+Example 32 (Frequency: 285 times):
+------------------------------
+user_input: Can you help me dispute a late fee on my credit card?
+ticket_type: assistance
+title: Credit Card Late Fee Dispute
+description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you help me dispute a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+severity: medium
+department_impacted: Customer Service
+service_impacted: General Banking
+preferred_communication: phone
+assistance_request: general assistance
+
+Example 33 (Frequency: 163 times):
+------------------------------
+user_input: Can you help me dispute a late fee on my credit card?
+ticket_type: assistance
+title: Credit card late fee disposition
+description: Customer has submitted a request regarding credit card late fee disposition. Customer states: "Can you help me dispute a late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+severity: medium
+department_impacted: Customer Service
+service_impacted: General Banking
+preferred_communication: phone
+assistance_request: general assistance
+
+Example 50 (Frequency: 76 times):
+------------------------------
+user_input: Can you help me dispute an late fee on my credit card?
+ticket_type: assistance
+title: Credit card late fee dispute
+description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you help me dispute an late fee on my credit card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+severity: medium
+department_impacted: Customer Service
+service_impacted: General Banking
+preferred_communication: phone
+assistance_request: general assistance
+
+Example 27 (Frequency: 76 times):
+------------------------------
+user_input: Can you help me dispute a late fee on my Credit Card?
+ticket_type: assistance
+title: Credit card late fee dispute
+description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you help me dispute a late fee on my Credit Card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+severity: medium
+department_impacted: Customer Service
+service_impacted: General Banking
+preferred_communication: phone
+assistance_request: general assistance
+

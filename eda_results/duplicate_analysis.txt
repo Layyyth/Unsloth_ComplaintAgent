@@ -1,0 +1,271 @@
+DUPLICATE ANALYSIS REPORT
+==================================================
+
+Dataset: 2946 total rows
+Duplicates: 2195 rows (74.51%)
+Unique rows: 751
+Duplicate patterns: 152
+
+DUPLICATE PATTERNS (sorted by frequency):
+--------------------------------------------------
+
+Pattern #84 (appears 173 times):
+  user_input: How does one become eligible for a home loan? what documents are needed?
+  ticket_type: assistance
+  title: Home loan application process
+  description: Customer requires assistance with home loan application process. Customer states: "How does one become eligible for a home loan? what documents are needed?" This issue affects loan. Step-by-step guidance or hands-on support may be required.
+  severity: low
+  department_impacted: loans and mortgages
+  service_impacted: loan services
+  preferred_communication: phone
+
+Pattern #149 (appears 127 times):
+  user_input: Would you please assist me settle a legal matter on behalf of one of my clients?
+  ticket_type: assistance
+  title: Legal matters settlement
+  description: Customer has submitted a request regarding legal matters settlement. Customer states: "Would you please assist me settle a legal matter on behalf of one of my clients?"
+  severity: high
+  department_impacted: legal department
+  service_impacted: customer services
+  preferred_communication: phone
+
+Pattern #68 (appears 102 times):
+  user_input: How do I apply for a home loan? The application process seems long. Can you help me speed things up?
+  ticket_type: assistance
+  title: Home loan application process
+  description: Customer requires assistance with home loan application process. Customer states: "How do I apply for a home loan? The application process seems long. Can you help me speed things up?" This issue affects mobile banking, loan. Step-by-step guidance or hands-on support may be required.
+  severity: low
+  department_impacted: loans and mortgages
+  service_impacted: loan services
+  preferred_communication: phone
+
+Pattern #4 (appears 93 times):
+  user_input: CAN YOU HELP ME DETER MULTIPLE CHILDREN OF COLLECTIVE LIABILITY ON MY CAR LOAN?
+  ticket_type: assistance
+  title: Multiple child collection
+  description: Customer has submitted a request regarding multiple child collection. Customer states: "CAN YOU HELP ME DETER MULTIPLE CHILDREN OF COLLECTIVE LIABILITY ON MY CAR LOAN?" This issue affects loan.
+  severity: medium
+  department_impacted: loans and mortgages
+  service_impacted: loan services
+  preferred_communication: phone
+
+Pattern #67 (appears 76 times):
+  user_input: How do I apply for a home loan? The application process seems confusing.
+  ticket_type: assistance
+  title: Home Loan Application
+  description: Customer has submitted a request regarding home loan application. Customer states: "How do I apply for a home loan? The application process seems confusing." This issue affects mobile banking, loan.
+  severity: low
+  department_impacted: loans and mortgages
+  service_impacted: loan services
+  preferred_communication: phone
+
+Pattern #41 (appears 74 times):
+  user_input: Can you help me settle a legal issue on behalf of my client?
+  ticket_type: assistance
+  title: Legal case settlement
+  description: Customer has submitted a request regarding legal case settlement. Customer states: "Can you help me settle a legal issue on behalf of my client?"
+  severity: high
+  department_impacted: legal department
+  service_impacted: customer services
+  preferred_communication: phone
+
+Pattern #72 (appears 71 times):
+  user_input: How do I apply for a home loan? What documents are necessary?
+  ticket_type: assistance
+  title: Home loans application process
+  description: Customer requires assistance with home loans application process. Customer states: "How do I apply for a home loan? What documents are necessary?" This issue affects mobile banking, loan. Step-by-step guidance or hands-on support may be required.
+  severity: low
+  department_impacted: loans and mortgages
+  service_impacted: loan services
+  preferred_communication: phone
+
+Pattern #54 (appears 69 times):
+  user_input: Could you help me settle a legal matter on behalf of my client?
+  ticket_type: assistance
+  title: Legal matter settlement
+  description: Customer has submitted a request regarding legal matter settlement. Customer states: "Could you help me settle a legal matter on behalf of my client?"
+  severity: high
+  department_impacted: legal department
+  service_impacted: customer services
+  preferred_communication: phone
+
+Pattern #42 (appears 45 times):
+  user_input: Can you help me settle a legal matter from years ago?
+  ticket_type: assistance
+  title: Legal issue resolution
+  description: Customer has submitted a request regarding legal issue resolution. Customer states: "Can you help me settle a legal matter from years ago?"
+  severity: high
+  department_impacted: legal department
+  service_impacted: customer services
+  preferred_communication: phone
+
+Pattern #55 (appears 23 times):
+  user_input: Could you support my small business by helping me improve our marketing campaigns?
+  ticket_type: assistance
+  title: Small business marketing solutions
+  description: Customer requires assistance with small business marketing solutions. Customer states: "Could you support my small business by helping me improve our marketing campaigns?" Step-by-step guidance or hands-on support may be required.
+  severity: medium
+  department_impacted: marketing and communication
+  service_impacted: customer services
+  preferred_communication: phone
+
+Pattern #147 (appears 18 times):
+  user_input: Whoever said that technology will replace human beings never thought of that Esai Morency would become the next president of the United States.
+  ticket_type: complaint
+  title: Esai Morency sands as far as the eye can see
+  description: Customer has submitted a request regarding esai morency sands as far as the eye can see. Customer states: "Whoever said that technology will replace human beings never thought of that Esai Morency would become the next president of the United States."
+  severity: medium
+  department_impacted: technology and it security
+  service_impacted: customer services
+  preferred_communication: phone
+
+Pattern #10 (appears 18 times):
+  user_input: CAN YOU HELP ME DETERMINE whether or not my CreditCard has been stolen?
+  ticket_type: assistance
+  title: Stolen credit card
+  description: Customer has submitted a request regarding stolen credit card. Customer states: "CAN YOU HELP ME DETERMINE whether or not my CreditCard has been stolen?" This issue This matter requires immediate attention. The customer needs to update or modify their information.
+  severity: high
+  department_impacted: customer service
+  service_impacted: card services (debit,credit)
+  preferred_communication: phone
+
+Pattern #145 (appears 16 times):
+  user_input: Where can I find a loan officer?
+  ticket_type: inquiry
+  title: Loan officer search
+  description: Customer is seeking information about loan officer search. Customer states: "Where can I find a loan officer?" This issue affects loan. Detailed response with relevant information should be provided.
+  severity: low
+  department_impacted: loans and mortgages
+  service_impacted: loan services
+  preferred_communication: phone
+
+Pattern #59 (appears 16 times):
+  user_input: FY20 has ended. How much income will be available for investments?
+  ticket_type: complaint
+  title: Financial year end
+  description: Customer has submitted a request regarding financial year end. Customer states: "FY20 has ended. How much income will be available for investments?"
+  severity: high
+  department_impacted: investment banking
+  service_impacted: investment services
+  preferred_communication: phone
+
+Pattern #76 (appears 16 times):
+  user_input: How do I apply for a home loan? what docs are needed?
+  ticket_type: complaint
+  title: Request for home loan information
+  description: Customer has submitted a request regarding request for home loan information. Customer states: "How do I apply for a home loan? what docs are needed?" This issue affects mobile banking, loan.
+  severity: low
+  department_impacted: loans and mortgages
+  service_impacted: loan services
+  preferred_communication: phone
+
+Pattern #83 (appears 16 times):
+  user_input: How does a home loan work? What steps should a borrower take before applying?
+  ticket_type: inquiry
+  title: Home loan application process
+  description: Customer is seeking information about home loan application process. Customer states: "How does a home loan work? What steps should a borrower take before applying?" This issue affects mobile banking, loan. Detailed response with relevant information should be provided.
+  severity: low
+  department_impacted: loans and mortgages
+  service_impacted: loan services
+  preferred_communication: phone
+
+Pattern #94 (appears 15 times):
+  user_input: My network connection is slow. Can you help?
+  ticket_type: assistance
+  title: Network connection troubleshooting
+  description: Customer requires assistance with network connection troubleshooting. Customer states: "My network connection is slow. Can you help?" Step-by-step guidance or hands-on support may be required.
+  severity: high
+  department_impacted: customer service
+  service_impacted: branch network
+  preferred_communication: phone
+
+Pattern #28 (appears 15 times):
+  user_input: Can you help me dispute a late fee on my Credit Card?
+  ticket_type: assistance
+  title: Credit card late fee dispute
+  description: Customer has submitted a request regarding credit card late fee dispute. Customer states: "Can you help me dispute a late fee on my Credit Card?" This issue affects credit card, fee. The customer needs to update or modify their information.
+  severity: medium
+  department_impacted: credit card service
+  service_impacted: card services (debit,credit)
+  preferred_communication: phone
+
+Pattern #95 (appears 14 times):
+  user_input: My relationship with XYZ Bank ended unexpectedly. How should I approach a new one?
+  ticket_type: inquiry
+  title: Bank relationship management
+  description: Customer is seeking information about bank relationship management. Customer states: "My relationship with XYZ Bank ended unexpectedly. How should I approach a new one?" This issue affects mobile banking. Detailed response with relevant information should be provided.
+  severity: high
+  department_impacted: relationship department
+  service_impacted: customer services
+  preferred_communication: phone
+
+Pattern #73 (appears 14 times):
+  user_input: How do I apply for a home loan? What documents are needed?
+  ticket_type: inquiry
+  title: Home loan application process
+  description: Customer is seeking information about home loan application process. Customer states: "How do I apply for a home loan? What documents are needed?" This issue affects mobile banking, loan. Detailed response with relevant information should be provided.
+  severity: low
+  department_impacted: loans and mortgages
+  service_impacted: loan services
+  preferred_communication: phone
+
+... and 132 more patterns
+
+EXAMPLES OF MOST COMMON DUPLICATES:
+--------------------------------------------------
+
+Example 84 (Frequency: 173 times):
+------------------------------
+user_input: How does one become eligible for a home loan? what documents are needed?
+ticket_type: assistance
+title: Home loan application process
+description: Customer requires assistance with home loan application process. Customer states: "How does one become eligible for a home loan? what documents are needed?" This issue affects loan. Step-by-step guidance or hands-on support may be required.
+severity: low
+department_impacted: loans and mortgages
+service_impacted: loan services
+preferred_communication: phone
+
+Example 149 (Frequency: 127 times):
+------------------------------
+user_input: Would you please assist me settle a legal matter on behalf of one of my clients?
+ticket_type: assistance
+title: Legal matters settlement
+description: Customer has submitted a request regarding legal matters settlement. Customer states: "Would you please assist me settle a legal matter on behalf of one of my clients?"
+severity: high
+department_impacted: legal department
+service_impacted: customer services
+preferred_communication: phone
+
+Example 68 (Frequency: 102 times):
+------------------------------
+user_input: How do I apply for a home loan? The application process seems long. Can you help me speed things up?
+ticket_type: assistance
+title: Home loan application process
+description: Customer requires assistance with home loan application process. Customer states: "How do I apply for a home loan? The application process seems long. Can you help me speed things up?" This issue affects mobile banking, loan. Step-by-step guidance or hands-on support may be required.
+severity: low
+department_impacted: loans and mortgages
+service_impacted: loan services
+preferred_communication: phone
+
+Example 4 (Frequency: 93 times):
+------------------------------
+user_input: CAN YOU HELP ME DETER MULTIPLE CHILDREN OF COLLECTIVE LIABILITY ON MY CAR LOAN?
+ticket_type: assistance
+title: Multiple child collection
+description: Customer has submitted a request regarding multiple child collection. Customer states: "CAN YOU HELP ME DETER MULTIPLE CHILDREN OF COLLECTIVE LIABILITY ON MY CAR LOAN?" This issue affects loan.
+severity: medium
+department_impacted: loans and mortgages
+service_impacted: loan services
+preferred_communication: phone
+
+Example 67 (Frequency: 76 times):
+------------------------------
+user_input: How do I apply for a home loan? The application process seems confusing.
+ticket_type: assistance
+title: Home Loan Application
+description: Customer has submitted a request regarding home loan application. Customer states: "How do I apply for a home loan? The application process seems confusing." This issue affects mobile banking, loan.
+severity: low
+department_impacted: loans and mortgages
+service_impacted: loan services
+preferred_communication: phone
+

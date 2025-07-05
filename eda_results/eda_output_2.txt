@@ -1,0 +1,167 @@
+🔍 Starting Comprehensive EDA for Complaint Dataset
+================================================================================
+============================================================
+DATASET OVERVIEW
+============================================================
+Dataset Shape: (903, 9)
+Memory Usage: 0.75 MB
+
+Column Information:
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 903 entries, 0 to 902
+Data columns (total 9 columns):
+ #   Column                   Non-Null Count  Dtype 
+---  ------                   --------------  ----- 
+ 0   user_input               903 non-null    object
+ 1   ticket_type              903 non-null    object
+ 2   title                    903 non-null    object
+ 3   description              903 non-null    object
+ 4   severity                 903 non-null    object
+ 5   department_impacted      903 non-null    object
+ 6   service_impacted         903 non-null    object
+ 7   preferred_communication  903 non-null    object
+ 8   assistance_request       89 non-null     object
+dtypes: object(9)
+memory usage: 63.6+ KB
+None
+
+First 5 rows:
+                                          user_input ticket_type  ... preferred_communication  assistance_request
+0  I can't access my account online. It says 'inv...   complaint  ...                   phone                None
+1  The branch near me closed early yesterday. Wha...     inquiry  ...                   phone                None
+2  How do I apply for a home loan? What documents...     inquiry  ...                   phone                None
+3  There's a suspicious transaction on my credit ...   complaint  ...                   phone                None
+4  Can you help me dispute a late fee on my Credi...  assistance  ...                   phone  general assistance
+
+[5 rows x 9 columns]
+
+Missing Values:
+assistance_request    814
+dtype: int64
+
+Duplicate Rows: 0
+
+============================================================
+TEXT ANALYSIS
+============================================================
+
+DESCRIPTION Statistics:
+  Average length: 260.4 characters
+  Average words: 37.5
+  Max length: 500 characters
+  Min length: 15 characters
+
+============================================================
+CATEGORICAL ANALYSIS
+============================================================
+
+TICKET_TYPE Distribution:
+  complaint: 464 (51.38%)
+  inquiry: 350 (38.76%)
+  assistance: 89 (9.86%)
+  Unique values: 3
+  Most common: complaint (51.38%)
+
+SEVERITY Distribution:
+  high: 419 (46.4%)
+  low: 292 (32.34%)
+  medium: 190 (21.04%)
+  critical: 2 (0.22%)
+  Unique values: 4
+  Most common: high (46.4%)
+
+DEPARTMENT_IMPACTED Distribution:
+  customer service: 481 (53.27%)
+  branch management: 227 (25.14%)
+  credit card service: 122 (13.51%)
+  loans and mortgages: 43 (4.76%)
+  fraud detection and security: 9 (1.0%)
+  marketing and communication: 5 (0.55%)
+  legal department: 4 (0.44%)
+  technology and it security: 4 (0.44%)
+  insurance department: 2 (0.22%)
+  finance and account: 2 (0.22%)
+  merchant services department: 1 (0.11%)
+  investment banking: 1 (0.11%)
+  wealth management: 1 (0.11%)
+  relationship department: 1 (0.11%)
+  Unique values: 14
+  Most common: customer service (53.27%)
+
+SERVICE_IMPACTED Distribution:
+  customer services: 516 (57.14%)
+  card services (debit,credit): 150 (16.61%)
+  mobile banking: 60 (6.64%)
+  atm services: 57 (6.31%)
+  loan services: 44 (4.87%)
+  payment and transfers: 31 (3.43%)
+  online banking: 26 (2.88%)
+  branch network: 9 (1.0%)
+  account statement: 2 (0.22%)
+  fraud prevention: 2 (0.22%)
+  data security: 2 (0.22%)
+  account access: 2 (0.22%)
+  communication channels: 1 (0.11%)
+  investment services: 1 (0.11%)
+  Unique values: 14
+  Most common: customer services (57.14%)
+
+PREFERRED_COMMUNICATION Distribution:
+  phone: 894 (99.0%)
+  email: 9 (1.0%)
+  Unique values: 2
+  Most common: phone (99.0%)
+
+ASSISTANCE_REQUEST Distribution:
+  general assistance: 77 (8.53%)
+  account assistance: 7 (0.78%)
+  loan assistance: 5 (0.55%)
+  Unique values: 3
+  Most common: general assistance (8.53%)
+
+============================================================
+DATA LEAKAGE ANALYSIS
+============================================================
+
+============================================================
+CORRELATION ANALYSIS
+============================================================
+Not enough numerical columns for correlation analysis
+
+============================================================
+TEMPORAL ANALYSIS
+============================================================
+No date columns found
+
+============================================================
+WORD CLOUD ANALYSIS
+============================================================
+
+============================================================
+DATA QUALITY REPORT
+============================================================
+⚠️  QUALITY ISSUES FOUND:
+  - High missing values: {'assistance_request': 90.14}
+
+Data Completeness by Column:
+  user_input: 100.0% ✅
+  ticket_type: 100.0% ✅
+  title: 100.0% ✅
+  description: 100.0% ✅
+  severity: 100.0% ✅
+  department_impacted: 100.0% ✅
+  service_impacted: 100.0% ✅
+  preferred_communication: 100.0% ✅
+  assistance_request: 9.9% ❌
+
+============================================================
+DUPLICATE ANALYSIS
+============================================================
+Total rows: 903
+Duplicate rows: 0 (0.00%)
+Unique rows: 903
+✅ No duplicates found in the dataset
+
+================================================================================
+✅ EDA Complete! Review the outputs above for insights.
+================================================================================

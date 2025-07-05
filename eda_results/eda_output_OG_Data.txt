@@ -1,0 +1,173 @@
+🔍 Starting Comprehensive EDA for Complaint Dataset
+================================================================================
+============================================================
+DATASET OVERVIEW
+============================================================
+Dataset Shape: (19954, 9)
+Memory Usage: 17.77 MB
+
+Column Information:
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 19954 entries, 0 to 19953
+Data columns (total 9 columns):
+ #   Column                   Non-Null Count  Dtype 
+---  ------                   --------------  ----- 
+ 0   user_input               19954 non-null  object
+ 1   ticket_type              19954 non-null  object
+ 2   title                    19954 non-null  object
+ 3   description              19954 non-null  object
+ 4   severity                 19954 non-null  object
+ 5   department_impacted      19954 non-null  object
+ 6   service_impacted         19954 non-null  object
+ 7   preferred_communication  19954 non-null  object
+ 8   assistance_request       1916 non-null   object
+dtypes: object(9)
+memory usage: 1.4+ MB
+None
+
+First 5 rows:
+                                          user_input  ...  assistance_request
+0  I can't access my account online. It says 'inv...  ...                 NaN
+1  The branch near me closed early yesterday. Wha...  ...                 NaN
+2  How do I apply for a home loan? What documents...  ...                 NaN
+3  There's a suspicious transaction on my credit ...  ...                 NaN
+4  Can you help me dispute a late fee on my Credi...  ...  general assistance
+
+[5 rows x 9 columns]
+
+Missing Values:
+assistance_request    18038
+dtype: int64
+
+Duplicate Rows: 15513
+
+============================================================
+TEXT ANALYSIS
+============================================================
+
+DESCRIPTION Statistics:
+  Average length: 285.0 characters
+  Average words: 41.4
+  Max length: 500 characters
+  Min length: 14 characters
+
+============================================================
+CATEGORICAL ANALYSIS
+============================================================
+
+TICKET_TYPE Distribution:
+  complaint: 10487 (52.56%)
+  inquiry: 7551 (37.84%)
+  assistance: 1916 (9.6%)
+  Unique values: 3
+  Most common: complaint (52.56%)
+
+SEVERITY Distribution:
+  high: 9515 (47.68%)
+  low: 5557 (27.85%)
+  medium: 4855 (24.33%)
+  critical: 27 (0.14%)
+  Unique values: 4
+  Most common: high (47.68%)
+
+DEPARTMENT_IMPACTED Distribution:
+  Customer Service: 19954 (100.0%)
+  Unique values: 1
+  Most common: Customer Service (100.0%)
+
+SERVICE_IMPACTED Distribution:
+  General Banking: 19954 (100.0%)
+  Unique values: 1
+  Most common: General Banking (100.0%)
+
+PREFERRED_COMMUNICATION Distribution:
+  phone: 19954 (100.0%)
+  Unique values: 1
+  Most common: phone (100.0%)
+
+ASSISTANCE_REQUEST Distribution:
+  general assistance: 1882 (9.43%)
+  loan assistance: 20 (0.1%)
+  account assistance: 14 (0.07%)
+  Unique values: 3
+  Most common: general assistance (9.43%)
+
+============================================================
+DATA LEAKAGE ANALYSIS
+============================================================
+
+============================================================
+CORRELATION ANALYSIS
+============================================================
+Not enough numerical columns for correlation analysis
+
+============================================================
+TEMPORAL ANALYSIS
+============================================================
+No date columns found
+
+============================================================
+WORD CLOUD ANALYSIS
+============================================================
+
+============================================================
+DATA QUALITY REPORT
+============================================================
+⚠️  QUALITY ISSUES FOUND:
+  - High missing values: {'assistance_request': 90.4}
+  - High duplicate rate: 77.74%
+  - No variation in department_impacted
+  - No variation in service_impacted
+  - No variation in preferred_communication
+
+Data Completeness by Column:
+  user_input: 100.0% ✅
+  ticket_type: 100.0% ✅
+  title: 100.0% ✅
+  description: 100.0% ✅
+  severity: 100.0% ✅
+  department_impacted: 100.0% ✅
+  service_impacted: 100.0% ✅
+  preferred_communication: 100.0% ✅
+  assistance_request: 9.6% ❌
+
+============================================================
+DUPLICATE ANALYSIS
+============================================================
+Total rows: 19954
+Duplicate rows: 16482 (82.60%)
+Unique rows: 3472
+
+Found 76 unique duplicate patterns
+✅ Detailed duplicate analysis saved to: eda_results/duplicate_analysis.txt
+
+Top 5 most common duplicate patterns:
+  Pattern #36: 466 occurrences
+    User input: Can you help me dispute a late fee on my credit card?
+    Ticket type: assistance
+    Severity: medium
+
+  Pattern #32: 285 occurrences
+    User input: Can you help me dispute a late fee on my credit card?
+    Ticket type: assistance
+    Severity: medium
+
+  Pattern #33: 163 occurrences
+    User input: Can you help me dispute a late fee on my credit card?
+    Ticket type: assistance
+    Severity: medium
+
+  Pattern #50: 76 occurrences
+    User input: Can you help me dispute an late fee on my credit card?
+    Ticket type: assistance
+    Severity: medium
+
+  Pattern #27: 76 occurrences
+    User input: Can you help me dispute a late fee on my Credit Card?
+    Ticket type: assistance
+    Severity: medium
+
+
+================================================================================
+✅ EDA Complete! Review the outputs above for insights.
+================================================================================
