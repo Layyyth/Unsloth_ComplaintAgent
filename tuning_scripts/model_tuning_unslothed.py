@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
-Pod-optimized training script for banking complaint classification with Unsloth
+Pod-optimized training script for banking complaint classification and data extraction
+using Unsloth for memory-efficient fine-tuning.
+
+Author: Laith
+Date: 2023-10-27
 """
 
 import os
@@ -13,34 +17,53 @@ import random
 import numpy as np
 import argparse
 import re
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from datetime import datetime
 import warnings
+
+# Suppress warnings for a cleaner log
 warnings.filterwarnings('ignore')
 
-# Setup logging
+# ==============================================================================
+# 1. SETUP LOGGING AND REPRODUCIBILITY
+# ==============================================================================
 def setup_logging():
+    """Configures logging to both file and console."""
     log_format = '%(asctime)s - %(levelname)s - %(message)s'
     logging.basicConfig(
         level=logging.INFO,
         format=log_format,
         handlers=[
-            logging.FileHandler('training.log'),
+            logging.FileHandler("training_run.log"),
             logging.StreamHandler(sys.stdout)
         ]
     )
+    # Silence overly verbose loggers
+    logging.getLogger("transformers").setLevel(logging.WARNING)
+    logging.getLogger("datasets").setLevel(logging.WARNING)
     return logging.getLogger(__name__)
 
 logger = setup_logging()
 
-# Now import the ML libraries
+def set_seed(seed: int):
+    """Sets the seed for reproducibility."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    logger.info(f"Seed set to {seed} for reproducibility.")
+
+set_seed(42)
+
+# Now, we can safely import the heavy libraries
 try:
     from datasets import Dataset, DatasetDict
     from unsloth import FastLanguageModel, is_bfloat16_supported
     from unsloth.chat_templates import get_chat_template
     from sklearn.metrics import (
-        classification_report, 
-        accuracy_score, 
+        classification_report,
+        accuracy_score,
         precision_recall_fscore_support,
         confusion_matrix
     )
@@ -48,460 +71,423 @@ try:
     import seaborn as sns
     import wandb
     from trl import SFTTrainer
-    from transformers import TrainingArguments as SFTConfig
-    logger.info("✓ All ML libraries imported successfully")
+    from transformers import TrainingArguments
+    logger.info("✓ All ML libraries imported successfully.")
 except ImportError as e:
-    logger.error(f"Failed to import ML libraries: {e}")
-    raise
+    logger.error(f"❌ Failed to import a required ML library: {e}")
+    logger.error("Please install all dependencies from requirements.txt")
+    sys.exit(1)
 
-# Configuration
-SYSTEM_PROMPT = """You are a banking customer service ticket classification and filling assistant. Your role is to:
 
-1. Analyze customer inputs and extract relevant information.
-2. Fill ticket fields accurately based on the customer's request.
-3. Stay strictly within the banking and financial services domain.
-4. Reject any requests outside of banking support.
+# ==============================================================================
+# 2. SYSTEM PROMPT AND CONFIGURATION
+# ==============================================================================
+SYSTEM_PROMPT = """You are an automated banking customer service ticket analysis system. Your purpose is to parse a customer's request and structure it into a standardized JSON format for internal ticketing.
 
-You must ONLY respond with a valid JSON object containing the ticket fields. Do not provide any other information or engage in conversation.
+You must perform the following actions:
+1.  Carefully analyze the user's input to understand their intent and key details.
+2.  Populate all fields in the JSON object based *only* on the user's text. Do not invent information.
+3.  Adhere strictly to the defined categories for `ticket_type`, `severity`, and other categorical fields.
+4.  If the user's request is NOT related to banking or financial services (e.g., tech support for a personal computer, dating advice), you MUST reject it by responding with `{"error": "Request is outside the banking support domain."}`.
 
-Required fields:
-- ticket_type: "complaint", "inquiry", or "assistance"
-- title: Brief summary of the issue
-- description: Detailed description
-- severity: "low", "medium", "high", or "critical"
-- department_impacted: The bank department affected
-- service_impacted: The specific service affected
-- preferred_communication: "email", "phone", "chat", "in-person", or ""
-- assistance_request: (ONLY if ticket_type is "assistance") - specific assistance needed
+Your entire response must be ONLY the JSON object, with no conversational text, apologies, or explanations.
 
-If the request is not related to banking, respond with: {"error": "Request outside banking domain"}"""
+The required JSON format is:
+{
+  "ticket_type": "complaint" | "inquiry" | "assistance",
+  "title": "A brief, descriptive summary of the user's issue.",
+  "description": "A more detailed description based on the user's full input.",
+  "severity": "low" | "medium" | "high" | "critical",
+  "department_impacted": "The most relevant bank department.",
+  "service_impacted": "The specific banking service affected."
+}"""
 
-class UnslothComplaintTrainer:
+class ComplaintClassifierTrainer:
     def __init__(self, config: Dict):
         self.config = config
-        self.setup_reproducibility()
         self.setup_wandb()
-        
-    def setup_reproducibility(self):
-        random.seed(42)
-        np.random.seed(42)
-        torch.manual_seed(42)
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed_all(42)
-            
+
     def setup_wandb(self):
-        try:
-            wandb.init(
-                project="banking-complaint-classifier-pod",
-                name=f"qwen-unsloth-{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                config=self.config,
-                resume="allow"
-            )
-            logger.info("✓ W&B initialized successfully")
-        except Exception as e:
-            logger.warning(f"W&B initialization failed: {e}")
+        """Initializes Weights & Biases if the API key is available."""
+        if os.getenv("WANDB_API_KEY"):
+            try:
+                wandb.init(
+                    project=self.config.get("wandb_project", "banking-complaint-classifier"),
+                    name=f"{self.config['model_name'].split('/')[-1]}-{datetime.now().strftime('%Y%m%d-%H%M')}",
+                    config=self.config,
+                    resume="allow"
+                )
+                logger.info("✓ W&B initialized successfully.")
+            except Exception as e:
+                logger.warning(f"⚠️ W&B initialization failed: {e}. Training will continue without W&B.")
+                self.config['report_to'] = "none"
+        else:
+            logger.info("WANDB_API_KEY not found. Skipping W&B initialization.")
+            self.config['report_to'] = "none"
 
     def check_gpu_compatibility(self):
+        """Checks for CUDA and GPU compatibility."""
         if not torch.cuda.is_available():
-            raise SystemExit("❌ CUDA not available. This script requires a GPU.")
-        gpu_name = torch.cuda.get_device_name()
-        gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1e9
-        logger.info(f"✓ GPU: {gpu_name}")
-        logger.info(f"✓ CUDA version: {torch.version.cuda}")
-        logger.info(f"✓ GPU memory: {gpu_memory:.1f} GB")
-        logger.info(f"✓ Unsloth bfloat16 support: {is_bfloat16_supported()}")
-        if gpu_memory < 15:
-            logger.warning("⚠ GPU memory < 15GB - consider reducing batch size")
+            logger.error("❌ CUDA is not available. This script requires a GPU-enabled pod.")
+            raise SystemExit("Exiting: No GPU found.")
+        
+        gpu_name = torch.cuda.get_device_name(0)
+        gpu_memory_gb = torch.cuda.get_device_properties(0).total_memory / 1e9
+        logger.info(f"✓ GPU Found: {gpu_name}")
+        logger.info(f"✓ GPU Memory: {gpu_memory_gb:.2f} GB")
+        logger.info(f"✓ CUDA Version: {torch.version.cuda}")
+        logger.info(f"✓ bfloat16 Supported: {is_bfloat16_supported()}")
+        if gpu_memory_gb < 15:
+            logger.warning("⚠️ GPU memory is less than 15GB. Consider reducing batch size if you encounter memory errors.")
 
-    def load_data_flexible(self, data_source: str) -> List[Dict]:
-        logger.info(f"Loading data from: {data_source}")
+    def load_and_prepare_data(self, data_path: str) -> Tuple[List, List, List]:
+        """Loads, analyzes, cleans, and splits the data."""
+        logger.info("=== Data Loading and Preparation Pipeline ===")
+        # Load
         try:
-            if data_source.startswith('http'):
-                import requests
-                response = requests.get(data_source)
-                response.raise_for_status()
-                data = response.json()
-                logger.info(f"✓ Downloaded data from URL: {len(data)} samples")
-            elif data_source.startswith('hf://'):
-                from datasets import load_dataset
-                dataset_name = data_source.replace('hf://', '')
-                dataset = load_dataset(dataset_name)
-                data = dataset['train'].to_list()
-                logger.info(f"✓ Loaded from HF dataset: {len(data)} samples")
-            else:
-                with open(data_source, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                logger.info(f"✓ Loaded local file: {len(data)} samples")
-            return data
+            with open(data_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            logger.info(f"✓ Loaded {len(data)} samples from {data_path}")
         except Exception as e:
-            logger.error(f"Failed to load data: {e}")
+            logger.error(f"❌ Failed to load or parse data from {data_path}: {e}")
             raise
 
-    def analyze_data_quality(self, data: List[Dict]):
-        logger.info("=== DATA QUALITY ANALYSIS ===")
-        logger.info(f"Total samples: {len(data)}")
+        # Analyze and Clean
         unique_data = []
         seen_inputs = set()
         for sample in data:
-            if sample['user_input'] not in seen_inputs:
+            if 'user_input' in sample and sample['user_input'] and sample['user_input'] not in seen_inputs:
                 unique_data.append(sample)
                 seen_inputs.add(sample['user_input'])
+        
         duplicate_count = len(data) - len(unique_data)
         if duplicate_count > 0:
-            logger.info(f"Removed {duplicate_count} duplicates ({duplicate_count/len(data)*100:.1f}%)")
-        ticket_types = [sample['ticket_data']['ticket_type'] for sample in unique_data]
-        type_counts = pd.Series(ticket_types).value_counts()
-        logger.info("Ticket Type Distribution:")
-        for ticket_type, count in type_counts.items():
-            logger.info(f"  {ticket_type}: {count} ({count/len(unique_data)*100:.1f}%)")
-        departments = [sample['ticket_data']['department_impacted'] for sample in unique_data]
-        services = [sample['ticket_data']['service_impacted'] for sample in unique_data]
-        logger.info(f"Department diversity: {len(set(departments))} unique")
-        logger.info(f"Service diversity: {len(set(services))} unique")
-        text_lengths = [len(sample['user_input']) for sample in unique_data]
-        logger.info(f"Text length - Mean: {np.mean(text_lengths):.1f}, "
-                   f"Median: {np.median(text_lengths):.1f}, "
-                   f"Max: {max(text_lengths)}")
-        return unique_data
-
-    def create_stratified_splits(self, samples: List[Dict], train_ratio: float = 0.7, val_ratio: float = 0.15):
-        logger.info("=== CREATING STRATIFIED SPLITS ===")
+            logger.info(f"Removed {duplicate_count} duplicate samples ({duplicate_count/len(data):.1%}).")
+        
+        # Stratified Split
         type_groups = {}
-        for sample in samples:
-            ticket_type = sample['ticket_data']['ticket_type']
-            if ticket_type not in type_groups:
-                type_groups[ticket_type] = []
-            type_groups[ticket_type].append(sample)
+        for sample in unique_data:
+            ticket_type = sample.get('ticket_data', {}).get('ticket_type', 'unknown')
+            type_groups.setdefault(ticket_type, []).append(sample)
+        
         train_samples, val_samples, test_samples = [], [], []
-        for ticket_type, group_samples in type_groups.items():
-            random.shuffle(group_samples)
-            n_samples = len(group_samples)
+        train_ratio, val_ratio = 0.8, 0.1 # Test ratio is implicitly 0.1
+        
+        logger.info("Performing stratified split based on 'ticket_type':")
+        for ticket_type, samples in type_groups.items():
+            random.shuffle(samples)
+            n_samples = len(samples)
             train_end = int(n_samples * train_ratio)
-            val_end = int(n_samples * (train_ratio + val_ratio))
-            train_samples.extend(group_samples[:train_end])
-            val_samples.extend(group_samples[train_end:val_end])
-            test_samples.extend(group_samples[val_end:])
-            logger.info(f"{ticket_type}: {len(group_samples[:train_end])} train, "
-                       f"{len(group_samples[train_end:val_end])} val, "
-                       f"{len(group_samples[val_end:])} test")
+            val_end = train_end + int(n_samples * val_ratio)
+            
+            train_samples.extend(samples[:train_end])
+            val_samples.extend(samples[train_end:val_end])
+            test_samples.extend(samples[val_end:])
+            logger.info(f"  - {ticket_type}: {len(samples[:train_end])} train, {len(samples[train_end:val_end])} val, {len(samples[val_end:])} test")
+
         random.shuffle(train_samples)
         random.shuffle(val_samples)
         random.shuffle(test_samples)
-        logger.info(f"Final splits - Train: {len(train_samples)}, "
-                   f"Val: {len(val_samples)}, Test: {len(test_samples)}")
+
+        logger.info(f"✓ Final split sizes -> Train: {len(train_samples)}, Validation: {len(val_samples)}, Test: {len(test_samples)}")
         return train_samples, val_samples, test_samples
 
-    def prepare_model_and_tokenizer(self):
-        logger.info("🚀 Preparing model with Unsloth...")
-        try:
-            model, tokenizer = FastLanguageModel.from_pretrained(
-                model_name=self.config["model_name"],
-                max_seq_length=self.config["max_length"],
-                dtype=None,
-                load_in_4bit=True,
-            )
-            model = FastLanguageModel.get_peft_model(
-                model,
-                r=self.config["lora_r"],
-                target_modules=[
-                    "q_proj", "k_proj", "v_proj", "o_proj",
-                    "gate_proj", "up_proj", "down_proj"
-                ],
-                lora_alpha=self.config["lora_alpha"],
-                lora_dropout=0,
-                bias="none",
-                use_gradient_checkpointing="unsloth",
-                random_state=3407,
-            )
-            tokenizer = get_chat_template(
-                tokenizer,
-                chat_template="qwen-2.5",
-            )
-            logger.info("✓ Model and tokenizer prepared successfully")
-            return model, tokenizer
-        except Exception as e:
-            logger.error(f"Failed to prepare model: {e}")
-            raise
-
-    def create_training_prompt(self, example: Dict, tokenizer) -> str:
-        user_input = example['user_input']
-        ticket_data = example['ticket_data']
-        conversation = [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_input},
-            {"role": "assistant", "content": json.dumps(ticket_data, indent=2)}
-        ]
-        return tokenizer.apply_chat_template(
-            conversation, 
-            tokenize=False, 
-            add_generation_prompt=False
+    def get_model_and_tokenizer(self):
+        """Loads the 4-bit quantized model and tokenizer using Unsloth."""
+        logger.info(f"🚀 Initializing model: {self.config['model_name']}")
+        model, tokenizer = FastLanguageModel.from_pretrained(
+            model_name=self.config["model_name"],
+            max_seq_length=self.config["max_seq_length"],
+            dtype=None,      # Let Unsloth auto-detect dtype
+            load_in_4bit=True,
         )
 
-    def create_datasets(self, train_samples: List[Dict], val_samples: List[Dict], test_samples: List[Dict], tokenizer):
-        logger.info("Creating datasets...")
-        def format_dataset(samples_list):
-            formatted_data = []
-            for sample in samples_list:
-                try:
-                    text = self.create_training_prompt(sample, tokenizer)
-                    formatted_data.append({"text": text})
-                except Exception as e:
-                    logger.warning(f"Skipped sample due to formatting error: {e}")
-            return Dataset.from_list(formatted_data)
-        dataset_dict = DatasetDict({
-            "train": format_dataset(train_samples),
-            "validation": format_dataset(val_samples)
-        })
-        logger.info(f"✓ Created datasets - Train: {len(dataset_dict['train'])}, "
-                   f"Val: {len(dataset_dict['validation'])}")
-        return dataset_dict, test_samples
+        logger.info("Applying PEFT (LoRA) configuration...")
+        model = FastLanguageModel.get_peft_model(
+            model,
+            r=self.config["lora_r"],
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+            lora_alpha=self.config["lora_alpha"],
+            lora_dropout=0.05,
+            bias="none",
+            use_gradient_checkpointing=True,
+            random_state=42,
+        )
+        
+        tokenizer = get_chat_template(
+            tokenizer,
+            chat_template="qwen2.5", # Use the clear and simple Qwen template
+        )
+        
+        logger.info("✓ Model and tokenizer are ready for training.")
+        return model, tokenizer
 
-    def train_model(self, model, tokenizer, datasets):
-        logger.info("🚀 Starting training...")
+    def create_formatted_datasets(self, train_samples, val_samples, tokenizer):
+        """Formats the data splits into Hugging Face Datasets."""
+        def format_prompt(example):
+            conversation = [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": example['user_input']},
+                {"role": "assistant", "content": json.dumps(example['ticket_data'])}
+            ]
+            return {"text": tokenizer.apply_chat_template(conversation, tokenize=False, add_generation_prompt=False)}
+
+        train_dataset = Dataset.from_list(train_samples).map(format_prompt)
+        val_dataset = Dataset.from_list(val_samples).map(format_prompt)
+        
+        return DatasetDict({"train": train_dataset, "validation": val_dataset})
+
+    def train(self, model, tokenizer, datasets):
+        """Configures and runs the SFTTrainer."""
+        logger.info("🚀 Starting model training...")
+        
+        # Correctly set FP16/BF16 flags
+        use_fp16 = not is_bfloat16_supported()
+        use_bf16 = is_bfloat16_supported()
+
+        training_args = TrainingArguments(
+            per_device_train_batch_size=self.config["batch_size"],
+            gradient_accumulation_steps=self.config["gradient_accumulation_steps"],
+            warmup_steps=self.config["warmup_steps"],
+            num_train_epochs=self.config["num_epochs"],
+            learning_rate=self.config["learning_rate"],
+            fp16=use_fp16,
+            bf16=use_bf16,
+            logging_steps=self.config["logging_steps"],
+            optim="adamw_8bit",
+            weight_decay=0.01,
+            lr_scheduler_type="linear",
+            seed=42,
+            output_dir=self.config["output_dir"],
+            # Evaluation and Saving Strategy
+            eval_strategy="steps",
+            eval_steps=self.config["eval_steps"],
+            save_strategy="steps",
+            save_steps=self.config["save_steps"],
+            save_total_limit=2,
+            load_best_model_at_end=True,
+            metric_for_best_model="eval_loss",
+            greater_is_better=False,
+            # W&B and Hub Integration
+            report_to=self.config['report_to'],
+            push_to_hub=bool(os.getenv('HF_TOKEN')),
+            hub_model_id=self.config.get("hub_repo_id"),
+            hub_strategy="every_save"
+        )
+
+        trainer = SFTTrainer(
+            model=model,
+            tokenizer=tokenizer,
+            train_dataset=datasets["train"],
+            eval_dataset=datasets["validation"],
+            dataset_text_field="text",
+            max_seq_length=self.config["max_seq_length"],
+            args=training_args,
+            packing=False, # Important for chat-formatted data
+        )
+        
+        # Log GPU memory before training
         if torch.cuda.is_available():
-            gpu_stats = torch.cuda.get_device_properties(0)
-            start_gpu_memory = round(torch.cuda.max_memory_reserved() / 1024 / 1024 / 1024, 3)
-            max_memory = round(gpu_stats.total_memory / 1024 / 1024 / 1024, 3)
-            logger.info(f"GPU: {gpu_stats.name}, Max memory: {max_memory} GB")
-            logger.info(f"Memory reserved before training: {start_gpu_memory} GB")
-        try:
-            trainer = SFTTrainer(
-                model=model,
-                tokenizer=tokenizer,
-                train_dataset=datasets["train"],
-                eval_dataset=datasets["validation"],
-                dataset_text_field="text",
-                max_seq_length=self.config["max_length"],
-                dataset_num_proc=2,
-                packing=False,
-                args=SFTConfig(
-                    per_device_train_batch_size=self.config["batch_size"],
-                    per_device_eval_batch_size=self.config["batch_size"],
-                    gradient_accumulation_steps=self.config["gradient_accumulation_steps"],
-                    warmup_steps=self.config["warmup_steps"],
-                    num_train_epochs=self.config["num_epochs"],
-                    learning_rate=self.config["learning_rate"],
-                    fp16=not is_bfloat16_supported(),
-                    bf16=is_bfloat16_supported(),
-                    logging_steps=self.config["logging_steps"],
-                    optim="adamw_8bit",
-                    weight_decay=0.01,
-                    lr_scheduler_type="cosine",
-                    seed=3407,
-                    output_dir=self.config["output_dir"],
-                    eval_strategy="steps",
-                    eval_steps=self.config["eval_steps"],
-                    save_strategy="steps",
-                    save_steps=self.config["save_steps"],
-                    save_total_limit=3,
-                    load_best_model_at_end=True,
-                    metric_for_best_model="eval_loss",
-                    greater_is_better=False,
-                    report_to="wandb" if wandb.run else "none",
-                    push_to_hub=bool(os.getenv('HF_TOKEN')),
-                    hub_model_id=self.config.get("hub_repo"),
-                    hub_strategy="every_save" if os.getenv('HF_TOKEN') else "end",
-                    dataloader_num_workers=2,
-                    remove_unused_columns=False,
-                ),
-            )
-            trainer_stats = trainer.train()
-            if torch.cuda.is_available():
-                used_memory = round(torch.cuda.max_memory_reserved() / 1024 / 1024 / 1024, 3)
-                used_memory_for_training = round(used_memory - start_gpu_memory, 3)
-                logger.info(f"Training completed in {trainer_stats.metrics['train_runtime']:.2f} seconds")
-                logger.info(f"Peak memory usage: {used_memory} GB")
-                logger.info(f"Memory used for training: {used_memory_for_training} GB")
-            model.save_pretrained(self.config["output_dir"])
-            tokenizer.save_pretrained(self.config["output_dir"])
-            logger.info(f"✓ Model saved to {self.config['output_dir']}")
-            return trainer
-        except Exception as e:
-            logger.error(f"Training failed: {e}")
-            raise
+            torch.cuda.empty_cache()
+            start_gpu_mem = torch.cuda.memory_allocated() / 1e9
+            logger.info(f"GPU Memory allocated before training: {start_gpu_mem:.3f} GB")
 
-    def evaluate_model(self, model, tokenizer, test_samples: List[Dict]):
-        logger.info("=== STARTING EVALUATION ===")
+        trainer.train()
+
+        # Log GPU memory after training
+        if torch.cuda.is_available():
+            end_gpu_mem = torch.cuda.max_memory_allocated() / 1e9
+            logger.info(f"Peak GPU Memory during training: {end_gpu_mem:.3f} GB")
+
+        logger.info("✓ Training complete. Saving final model.")
+        model.save_pretrained(self.config["output_dir"])
+        tokenizer.save_pretrained(self.config["output_dir"])
+        
+        return trainer
+
+    def evaluate_and_log(self, model, tokenizer, test_samples: List[Dict]):
+        """Evaluates the model on the test set and logs detailed metrics."""
+        logger.info("\n" + "="*80)
+        logger.info("🔍 Starting Final Evaluation on Test Set")
+        logger.info("="*80)
+        
         FastLanguageModel.for_inference(model)
-        metrics = {
-            'ticket_type': {'pred': [], 'true': []},
-            'severity': {'pred': [], 'true': []},
-            'department': {'pred': [], 'true': []},
-            'service': {'pred': [], 'true': []}
-        }
-        successful_predictions = 0
-        total_samples = len(test_samples)
-        logger.info(f"Evaluating on {total_samples} test samples...")
+        
+        results = []
+        parsing_failures = 0
+
         for i, sample in enumerate(test_samples):
-            if i % 50 == 0:
-                logger.info(f"Progress: {i+1}/{total_samples}")
+            if (i + 1) % 20 == 0:
+                logger.info(f"Evaluating sample {i+1}/{len(test_samples)}...")
+
+            messages = [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": sample["user_input"]},
+            ]
+            inputs = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, return_tensors="pt").to("cuda")
+
+            with torch.no_grad():
+                outputs = model.generate(input_ids=inputs, max_new_tokens=512, use_cache=True, pad_token_id=tokenizer.eos_token_id)
+            
+            response_text = tokenizer.batch_decode(outputs[:, inputs.shape[1]:], skip_special_tokens=True)[0]
+            
+            predicted_data = None
             try:
-                messages = [
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": sample["user_input"]},
-                ]
-                inputs = tokenizer.apply_chat_template(
-                    messages,
-                    tokenize=True,
-                    add_generation_prompt=True,
-                    return_tensors="pt"
-                ).to("cuda")
-                with torch.no_grad():
-                    outputs = model.generate(
-                        input_ids=inputs,
-                        max_new_tokens=512,
-                        temperature=0.1,
-                        do_sample=True,
-                        pad_token_id=tokenizer.eos_token_id,
-                        repetition_penalty=1.1,
-                        use_cache=True
-                    )
-                response = tokenizer.decode(outputs[0][inputs.shape[-1]:], skip_special_tokens=True)
-                json_match = re.search(r'\{.*\}', response, re.DOTALL)
+                # Robust JSON extraction
+                json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
                 if json_match:
-                    pred_ticket = json.loads(json_match.group())
-                    true_data = sample["ticket_data"]
-                    metrics['ticket_type']['pred'].append(pred_ticket.get("ticket_type", "unknown"))
-                    metrics['ticket_type']['true'].append(true_data.get("ticket_type", "unknown"))
-                    metrics['severity']['pred'].append(pred_ticket.get("severity", "unknown"))
-                    metrics['severity']['true'].append(true_data.get("severity", "unknown"))
-                    metrics['department']['pred'].append(pred_ticket.get("department_impacted", "unknown"))
-                    metrics['department']['true'].append(true_data.get("department_impacted", "unknown"))
-                    metrics['service']['pred'].append(pred_ticket.get("service_impacted", "unknown"))
-                    metrics['service']['true'].append(true_data.get("service_impacted", "unknown"))
-                    successful_predictions += 1
+                    predicted_data = json.loads(json_match.group(0))
                 else:
-                    for field in metrics:
-                        metrics[field]['pred'].append("parse_error")
-                        metrics[field]['true'].append(sample["ticket_data"].get(
-                            field if field != 'department' else 'department_impacted',
-                            field if field != 'service' else 'service_impacted'
-                        ))
-            except Exception as e:
-                logger.warning(f"Evaluation error for sample {i}: {e}")
-                for field in metrics:
-                    metrics[field]['pred'].append("error")
-                    metrics[field]['true'].append(sample["ticket_data"].get(
-                        field if field != 'department' else 'department_impacted',
-                        field if field != 'service' else 'service_impacted'
-                    ))
-        self.log_evaluation_results(metrics, successful_predictions, total_samples)
-        return metrics
+                    raise json.JSONDecodeError("No JSON object found in response", response_text, 0)
+            except json.JSONDecodeError:
+                parsing_failures += 1
+                predicted_data = {"error": "JSON Parsing Failed"}
 
-    def log_evaluation_results(self, metrics: Dict, successful_predictions: int, total_samples: int):
-        logger.info("=" * 80)
-        logger.info("EVALUATION RESULTS")
-        logger.info("=" * 80)
-        success_rate = successful_predictions / total_samples
-        logger.info(f"Successful predictions: {successful_predictions}/{total_samples} ({success_rate:.2%})")
-        evaluation_results = {}
-        for field_name, field_data in metrics.items():
-            if len(field_data['true']) > 0:
-                accuracy = accuracy_score(field_data['true'], field_data['pred'])
-                precision, recall, f1, _ = precision_recall_fscore_support(
-                    field_data['true'], field_data['pred'], average='weighted', zero_division=0
-                )
-                logger.info(f"\n{field_name.upper()}:")
-                logger.info(f"  Accuracy: {accuracy:.4f}")
-                logger.info(f"  Precision: {precision:.4f}")
-                logger.info(f"  Recall: {recall:.4f}")
-                logger.info(f"  F1-Score: {f1:.4f}")
-                evaluation_results[f"{field_name}_accuracy"] = accuracy
-                evaluation_results[f"{field_name}_precision"] = precision
-                evaluation_results[f"{field_name}_recall"] = recall
-                evaluation_results[f"{field_name}_f1"] = f1
-        if wandb.run:
-            wandb.log({
-                "eval_success_rate": success_rate,
-                **evaluation_results
+            results.append({
+                "user_input": sample["user_input"],
+                "true_data": sample["ticket_data"],
+                "predicted_data": predicted_data,
+                "full_response": response_text
             })
-        results_path = os.path.join(self.config["output_dir"], "evaluation_results.json")
-        with open(results_path, 'w') as f:
-            json.dump({
-                "success_rate": success_rate,
-                "successful_predictions": successful_predictions,
-                "total_samples": total_samples,
-                "field_metrics": evaluation_results,
-                "detailed_metrics": metrics
-            }, f, indent=2)
-        logger.info(f"✓ Detailed results saved to {results_path}")
 
-    def run_complete_pipeline(self, data_source: str):
-        logger.info("STARTING COMPLETE TRAINING PIPELINE")
-        logger.info("=" * 80)
-        try:
-            self.check_gpu_compatibility()
-            raw_data = self.load_data_flexible(data_source)
-            clean_data = self.analyze_data_quality(raw_data)
-            train_samples, val_samples, test_samples = self.create_stratified_splits(clean_data)
-            model, tokenizer = self.prepare_model_and_tokenizer()
-            datasets, test_samples = self.create_datasets(train_samples, val_samples, test_samples, tokenizer)
-            trainer = self.train_model(model, tokenizer, datasets)
-            metrics = self.evaluate_model(trainer.model, tokenizer, test_samples)
-            if os.getenv('HF_TOKEN') and self.config.get("hub_repo"):
-                try:
-                    trainer.push_to_hub()
-                    logger.info(f"✓ Model uploaded to {self.config['hub_repo']}")
-                except Exception as e:
-                    logger.warning(f"Hub upload failed: {e}")
-            if wandb.run:
-                wandb.finish()
-            logger.info(" PIPELINE COMPLETED SUCCESSFULLY!")
-            return trainer, metrics
-        except Exception as e:
-            logger.error(f"Pipeline failed: {e}")
-            if wandb.run:
-                wandb.finish()
-            raise
+        # Save raw results for inspection
+        results_path = os.path.join(self.config["output_dir"], "test_results.json")
+        with open(results_path, 'w') as f:
+            json.dump(results, f, indent=2)
+        logger.info(f"✓ Full test results saved to {results_path}")
+        
+        # Calculate and log metrics
+        self._calculate_and_display_metrics(results, parsing_failures)
+
+    def _calculate_and_display_metrics(self, results, parsing_failures):
+        """Helper to compute and log metrics from evaluation results."""
+        total_samples = len(results)
+        fields_to_evaluate = ["ticket_type", "severity", "department_impacted", "service_impacted"]
+        metrics = {field: {"true": [], "pred": []} for field in fields_to_evaluate}
+        
+        for res in results:
+            if "error" not in res["predicted_data"]:
+                for field in fields_to_evaluate:
+                    metrics[field]["true"].append(res["true_data"].get(field, "N/A"))
+                    metrics[field]["pred"].append(res["predicted_data"].get(field, "Missing"))
+        
+        logger.info("\n" + "="*80)
+        logger.info("📊 Final Performance Metrics")
+        logger.info("="*80)
+
+        parsing_success_rate = (total_samples - parsing_failures) / total_samples
+        logger.info(f"JSON Parsing Success Rate: {parsing_success_rate:.2%} ({total_samples - parsing_failures}/{total_samples})")
+        
+        wandb_log = {"eval/parsing_success_rate": parsing_success_rate}
+        
+        for field, data in metrics.items():
+            if not data["true"]: continue
+            
+            accuracy = accuracy_score(data["true"], data["pred"])
+            report = classification_report(data["true"], data["pred"], zero_division=0, output_dict=True)
+            
+            logger.info(f"\n--- Metrics for: {field.upper()} ---")
+            logger.info(f"Accuracy: {accuracy:.4f}")
+            logger.info(f"\nClassification Report:\n{classification_report(data['true'], data['pred'], zero_division=0)}")
+            
+            # Log to W&B
+            wandb_log[f"eval/{field}_accuracy"] = accuracy
+            wandb_log[f"eval/{field}_f1_weighted"] = report["weighted avg"]["f1-score"]
+
+            # Plot and save confusion matrix
+            self.plot_confusion_matrix(data["true"], data["pred"], field)
+
+        if self.config['report_to'] == 'wandb':
+            wandb.log(wandb_log)
+            logger.info("✓ Metrics logged to W&B.")
+
+    def plot_confusion_matrix(self, y_true, y_pred, field_name):
+        """Plots and saves a confusion matrix for a given field."""
+        labels = sorted(list(set(y_true) | set(y_pred)))
+        cm = confusion_matrix(y_true, y_pred, labels=labels)
+        
+        plt.figure(figsize=(12, 10))
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels)
+        plt.title(f'Confusion Matrix for: {field_name.upper()}', fontsize=16)
+        plt.ylabel('True Label', fontsize=12)
+        plt.xlabel('Predicted Label', fontsize=12)
+        plt.xticks(rotation=45, ha="right")
+        plt.yticks(rotation=0)
+        plt.tight_layout()
+        
+        cm_path = os.path.join(self.config["output_dir"], f"confusion_matrix_{field_name}.png")
+        plt.savefig(cm_path)
+        plt.close()
+        
+        logger.info(f"✓ Confusion matrix for '{field_name}' saved to {cm_path}")
+        if self.config['report_to'] == 'wandb':
+            wandb.log({f"eval/cm_{field_name}": wandb.Image(cm_path)})
+
 
 def main():
-    parser = argparse.ArgumentParser(description='Train banking complaint classifier with Unsloth')
-    parser.add_argument('--data_path', type=str, default='workspace/Unsloth_ComplaintAgent/datasets/complaints.json',
-                   help='Path to training data (local file, URL, or hf://dataset_name)')
-    parser.add_argument('--output_dir', type=str, default='./outputs',
-                       help='Output directory for model and results')
-    parser.add_argument('--hub_repo', type=str, default='LaythAbuJafar/QwenInstruct7b_ComplaintAgent_Unsloth',
-                       help='Hugging Face repository for model upload')
-    parser.add_argument('--model_name', type=str, default='unsloth/Qwen2.5-7B-Instruct-bnb-4bit',
-                       help='Base model name')
-    parser.add_argument('--batch_size', type=int, default=8,
-                       help='Training batch size')
-    parser.add_argument('--epochs', type=int, default=3,
-                       help='Number of training epochs')
-    parser.add_argument('--learning_rate', type=float, default=2e-4,
-                       help='Learning rate')
-    parser.add_argument('--max_length', type=int, default=2048,
-                       help='Maximum sequence length')
+    parser = argparse.ArgumentParser(description="Fine-tune a Qwen-2.5 model for banking complaint classification.")
+    parser.add_argument('--data_path', type=str, default='complaints.json', help='Path to the JSON dataset.')
+    parser.add_argument('--output_dir', type=str, default='./qwen-complaint-agent', help='Directory to save the trained model and results.')
+    parser.add_argument('--hub_repo_id', type=str, default='LaythAbuJafar/QwenInstruct7b_ComplaintAgent_Unsloth', help='Hugging Face Hub repository ID for model upload.')
+    parser.add_argument('--model_name', type=str, default='unsloth/Qwen2.5-7B-Instruct-bnb-4bit', help='Base model from Hugging Face.')
+    parser.add_argument('--batch_size', type=int, default=2, help='Training batch size per device.')
+    parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs.')
+    parser.add_argument('--learning_rate', type=float, default=2e-4, help='Initial learning rate.')
+    parser.add_argument('--max_seq_length', type=int, default=2048, help='Maximum sequence length for the model.')
+    
     args = parser.parse_args()
+
     config = {
         "model_name": args.model_name,
-        "max_length": args.max_length,
+        "max_seq_length": args.max_seq_length,
         "learning_rate": args.learning_rate,
         "batch_size": args.batch_size,
-        "gradient_accumulation_steps": 2,
-        "num_epochs": args.epochs,
-        "warmup_steps": 100,
+        "gradient_accumulation_steps": 4, # Effective batch size = batch_size * grad_accum_steps
+        "num_epochs": args.num_epochs,
+        "warmup_steps": 50,
         "eval_steps": 50,
-        "save_steps": 100,
-        "logging_steps": 10,
-        "lora_r": 64,
-        "lora_alpha": 128,
+        "save_steps": 50,
+        "logging_steps": 5,
+        "lora_r": 32,
+        "lora_alpha": 64,
         "output_dir": args.output_dir,
-        "hub_repo": args.hub_repo,
-        "unsloth_optimized": True
+        "hub_repo_id": args.hub_repo_id,
+        "wandb_project": "banking-complaint-classifier",
+        "report_to": "wandb" if os.getenv("WANDB_API_KEY") else "none"
     }
-    logger.info(f"Configuration: {json.dumps(config, indent=2)}")
+    
+    logger.info(f"Starting training run with configuration:\n{json.dumps(config, indent=2)}")
+
     try:
-        trainer_instance = UnslothComplaintTrainer(config)
-        trainer, metrics = trainer_instance.run_complete_pipeline(args.data_path)
-        logger.info(" Training completed successfully!")
-        return trainer, metrics
-    except KeyboardInterrupt:
-        logger.info("Training interrupted by user")
-        return None, None
+        trainer_instance = ComplaintClassifierTrainer(config)
+        trainer_instance.check_gpu_compatibility()
+        
+        train_samples, val_samples, test_samples = trainer_instance.load_and_prepare_data(args.data_path)
+        
+        model, tokenizer = trainer_instance.get_model_and_tokenizer()
+        
+        datasets = trainer_instance.create_formatted_datasets(train_samples, val_samples, tokenizer)
+        
+        trainer = trainer_instance.train(model, tokenizer, datasets)
+        
+        trainer_instance.evaluate_and_log(trainer.model, tokenizer, test_samples)
+        
+        if os.getenv("HF_TOKEN"):
+            logger.info("🚀 Pushing final model to Hugging Face Hub...")
+            trainer.push_to_hub()
+            logger.info(f"✓ Model successfully pushed to {config['hub_repo_id']}")
+        
+        if wandb.run:
+            wandb.finish()
+            
+        logger.info("🎉🎉🎉 Training and Evaluation Pipeline Finished Successfully! 🎉🎉🎉")
+
     except Exception as e:
-        logger.error(f"Training failed with error: {e}")
-        raise
+        logger.error("❌ An unexpected error occurred during the pipeline.", exc_info=True)
+        if wandb.run:
+            wandb.finish(exit_code=1)
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
