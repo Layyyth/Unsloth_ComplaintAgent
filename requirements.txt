@@ -1,0 +1,28 @@
+# requirements.txt
+
+# Force numpy to a version compatible with torch 2.1.x
+numpy<2.0
+
+# For memory-efficient training and model loading
+# MUST install from Github to get the latest model support (Qwen2.5, etc.)
+unsloth[cu121-py310] @ git+https://github.com/unslothai/unsloth.git
+
+# Core Hugging Face and PyTorch ecosystem
+# Unpinning transformers to let unsloth choose its required version
+torch==2.7.0
+transformers
+trl==0.8.6
+datasets==2.19.0
+peft==0.10.0
+accelerate==0.29.3
+bitsandbytes==0.43.0
+xformers
+
+# Data handling and evaluation
+pandas
+scikit-learn
+
+# Plotting and Logging
+matplotlib
+seaborn
+wandb
